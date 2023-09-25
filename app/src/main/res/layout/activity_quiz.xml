@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    tools:context=".QuizActivity">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/tv_question_no"
+        android:text="@string/tv_number_text_default"
+        android:textSize="20sp"
+        />
+    <ImageView
+        android:layout_width="300dp"
+        android:layout_height="300dp"
+        android:id="@+id/iv_flag_img"
+        android:contentDescription="@string/iv_country_flag_text" />
+
+    <Button
+        android:layout_width="300dp"
+        android:layout_height="60dp"
+        android:id="@+id/btn_option1"
+        android:text="@string/btn_option_text_default"
+        />
+    <Button
+        android:layout_width="300dp"
+        android:layout_height="60dp"
+        android:id="@+id/btn_option2"
+        android:text="@string/btn_option_text_default"
+        />
+    <Button
+        android:layout_width="300dp"
+        android:layout_height="60dp"
+        android:id="@+id/btn_option3"
+        android:text="@string/btn_option_text_default"
+        />
+    <Button
+        android:layout_width="300dp"
+        android:layout_height="60dp"
+        android:id="@+id/btn_option4"
+        android:text="@string/btn_option_text_default"
+        />
+
+    <Button
+        android:layout_width="100dp"
+        android:layout_height="60dp"
+        android:id="@+id/btn_next"
+        android:backgroundTint="@color/black"
+        android:text="@string/btn_next_text"
+        />
+
+
+</LinearLayout>
