@@ -155,9 +155,9 @@ class QuizActivity : AppCompatActivity() {
     }
 
     private fun displayQuestionCards(questionList: List<Question>, index: Int, score: Int) {
-        displayQuestionCard(questionList[index]) { result ->
+        displayQuestionCard(questionList[index]) { isCorrect ->
             if (index < numberOfQuestions - 1) {
-                displayQuestionCards(questionList, index + 1, score + if (result) 1 else 0)
+                displayQuestionCards(questionList, index + 1, score + if (isCorrect) 1 else 0)
             } else {
                 startResultActivity(score)
             }
