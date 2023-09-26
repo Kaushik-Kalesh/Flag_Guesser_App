@@ -175,7 +175,9 @@ class QuizActivity : AppCompatActivity() {
             }
             btnSubmit.text = getString(R.string.btn_submit_text)
 
-            if(chosenOption == answer) score += 1
+            if(chosenOption == answer){
+                score += 1
+            }
 
             if(questionIndex < numberOfQuestions - 1){
                 displayQuestionCard(questionIndex + 1, questionList)
