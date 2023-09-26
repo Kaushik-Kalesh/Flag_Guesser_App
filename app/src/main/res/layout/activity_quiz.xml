@@ -49,9 +49,9 @@
     <Button
         android:layout_width="100dp"
         android:layout_height="60dp"
-        android:id="@+id/btn_next"
+        android:id="@+id/btn_submit"
         android:backgroundTint="@color/black"
-        android:text="@string/btn_next_text"
+        android:text="@string/btn_submit_text"
         />
 
 

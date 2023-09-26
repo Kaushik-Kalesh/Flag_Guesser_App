@@ -2,9 +2,9 @@ package com.example.quizapp
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.bumptech.glide.Glide
 import okhttp3.ResponseBody
 import org.json.JSONObject
@@ -17,6 +17,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 class QuizActivity : AppCompatActivity() {
     private val baseURL = "https://flagcdn.com"
     private val numberOfQuestions = 10
+    private var score = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,7 +57,7 @@ class QuizActivity : AppCompatActivity() {
         Toast.makeText(this, "Check your Internet connection!", Toast.LENGTH_LONG).show()
     }
 
-    private fun startResultActivity(score: Int) {
+    private fun startResultActivity() {
         val name = intent.getBundleExtra("nameBundle")?.getString("name")
 
         val resultActivityIntent = Intent(this, ResultActivity::class.java)
@@ -80,7 +81,7 @@ class QuizActivity : AppCompatActivity() {
             Question(index + 1, code, answerCountryNames[index], optionsCountryNames[index])
         }
 
-        displayQuestionCards(questionList, 0, 0)
+        displayQuestionCard(0, questionList)
     }
 
     // helper functions
@@ -123,7 +124,9 @@ class QuizActivity : AppCompatActivity() {
             .into(imageView)
     }
 
-    private fun displayQuestionCard(question: Question, callBack: (Boolean) -> Unit) {
+    private fun displayQuestionCard(questionIndex: Int, questionList: List<Question>) {
+        val question = questionList[questionIndex]
+
         val tvQuestionNo = findViewById<TextView>(R.id.tv_question_no)
         val ivFlagImage = findViewById<ImageView>(R.id.iv_flag_img)
         val btnOptionsList = listOf<Button>(
@@ -132,7 +135,7 @@ class QuizActivity : AppCompatActivity() {
             findViewById(R.id.btn_option3),
             findViewById(R.id.btn_option4)
         )
-        val btnNext = findViewById<Button>(R.id.btn_next)
+        val btnSubmit = findViewById<Button>(R.id.btn_submit)
 
         tvQuestionNo.text = getString(R.string.tv_number_text_default, question.id)
         downloadAndDisplayFlagImage("${baseURL}/w640/${question.countryCode}.png", ivFlagImage)
@@ -145,21 +148,40 @@ class QuizActivity : AppCompatActivity() {
             }
         }
 
-        btnNext.setOnClickListener {
+        btnSubmit.setOnClickListener {
             if (chosenOption == question.answer) {
-                callBack(true)
+                validateChosenOption(chosenOption, question.answer, btnOptionsList, btnSubmit, questionIndex, questionList)
             } else if (chosenOption.isNotEmpty()) {
-                callBack(false)
+                validateChosenOption(chosenOption, question.answer, btnOptionsList, btnSubmit, questionIndex, questionList)
             }
         }
     }
 
-    private fun displayQuestionCards(questionList: List<Question>, index: Int, score: Int) {
-        displayQuestionCard(questionList[index]) { isCorrect ->
-            if (index < numberOfQuestions - 1) {
-                displayQuestionCards(questionList, index + 1, score + if (isCorrect) 1 else 0)
-            } else {
-                startResultActivity(score)
+    private fun validateChosenOption(chosenOption: String, answer: Any, btnOptionsList: List<Button>, btnSubmit: Button, questionIndex: Int, questionList: List<Question>) {
+        btnOptionsList.forEach { btn ->
+            if(btn.text == answer) {
+                btn.setBackgroundColor(ContextCompat.getColor(this, R.color.green))
+            }
+            if(chosenOption != answer && btn.text == chosenOption) {
+                btn.setBackgroundColor(ContextCompat.getColor(this, R.color.red))
+            }
+        }
+
+        btnSubmit.text = getString(R.string.btn_submit_text_next)
+
+        btnSubmit.setOnClickListener {
+            btnOptionsList.forEach { btn ->
+                btn.setBackgroundColor(ContextCompat.getColor(this, R.color.purple_500))
+            }
+            btnSubmit.text = getString(R.string.btn_submit_text)
+
+            if(chosenOption == answer) score += 1
+
+            if(questionIndex < numberOfQuestions - 1){
+                displayQuestionCard(questionIndex + 1, questionList)
+            }
+            else {
+                startResultActivity()
             }
         }
     }

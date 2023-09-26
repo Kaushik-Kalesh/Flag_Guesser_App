@@ -5,9 +5,10 @@
     <string name="btn_start_text">Start</string>
     <string name="iv_country_flag_text">Image of a country flag</string>
     <string name="btn_option_text_default">Option</string>
-    <string name="btn_next_text">Next</string>
+    <string name="btn_submit_text">Submit</string>
     <string name="tv_congrats_text_default">%s, %s!</string>
     <string name="tv_score_text">Your Score:</string>
     <string name="tv_result_text_default">%d/10</string>
     <string name="tv_number_text_default">%d/10</string>
+    <string name="btn_submit_text_next">Next</string>
 </resources>
