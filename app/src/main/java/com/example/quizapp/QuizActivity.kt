@@ -123,16 +123,6 @@ class QuizActivity : AppCompatActivity() {
             .into(imageView)
     }
 
-    private fun displayQuestionCards(questionList: List<Question>, index: Int, score: Int) {
-        displayQuestionCard(questionList[index]) { result ->
-            if (index < numberOfQuestions - 1) {
-                displayQuestionCards(questionList, index + 1, score + if (result) 1 else 0)
-            } else {
-                startResultActivity(score)
-            }
-        }
-    }
-
     private fun displayQuestionCard(question: Question, callBack: (Boolean) -> Unit) {
         val tvQuestionNo = findViewById<TextView>(R.id.tv_question_no)
         val ivFlagImage = findViewById<ImageView>(R.id.iv_flag_img)
@@ -158,9 +148,18 @@ class QuizActivity : AppCompatActivity() {
         btnNext.setOnClickListener {
             if (chosenOption == question.answer) {
                 callBack(true)
-                Log.d("CRT_ANS", chosenOption)
             } else if (chosenOption.isNotEmpty()) {
                 callBack(false)
+            }
+        }
+    }
+
+    private fun displayQuestionCards(questionList: List<Question>, index: Int, score: Int) {
+        displayQuestionCard(questionList[index]) { result ->
+            if (index < numberOfQuestions - 1) {
+                displayQuestionCards(questionList, index + 1, score + if (result) 1 else 0)
+            } else {
+                startResultActivity(score)
             }
         }
     }
