@@ -1,13 +1,10 @@
 package com.example.quizapp
 
-import android.content.Context
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.Button
-import android.widget.ImageView
-import android.widget.TextView
-import android.widget.Toast
+import android.util.Log
+import android.widget.*
+import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import okhttp3.ResponseBody
 import org.json.JSONObject
@@ -30,11 +27,13 @@ class QuizActivity : AppCompatActivity() {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
 
-        getAllCountryCodesJS0N(retrofit, ::main)
+        getAllCountryCodesJSON(retrofit) { countryCodesJSON ->
+            main(countryCodesJSON)
+        }
     }
 
     // API Handler
-    private fun getAllCountryCodesJS0N(retrofit: Retrofit, callBack: (JSONObject) -> Unit) {
+    private fun getAllCountryCodesJSON(retrofit: Retrofit, callBack: (JSONObject) -> Unit) {
         val flagpediaAPI = retrofit.create(FlagpediaAPI::class.java)
 
         flagpediaAPI.getCodes().enqueue(object : Callback<ResponseBody> {
@@ -43,103 +42,73 @@ class QuizActivity : AppCompatActivity() {
                     val countryCodesJSON = JSONObject(response.body()?.string().toString())
                     callBack(countryCodesJSON)
                 } else {
-                    Toast.makeText(applicationContext, "Check your Internet connection!", Toast.LENGTH_LONG).show()
+                    showConnectionError()
                 }
             }
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Toast.makeText(applicationContext, "Check your Internet connection!", Toast.LENGTH_LONG).show()
+                showConnectionError()
             }
         })
     }
 
+    private fun showConnectionError() {
+        Toast.makeText(this, "Check your Internet connection!", Toast.LENGTH_LONG).show()
+    }
+
     private fun startResultActivity(score: Int) {
-        val nameBundle = intent.getBundleExtra("nameBundle")
-        val name = nameBundle?.getString("name")
+        val name = intent.getBundleExtra("nameBundle")?.getString("name")
 
         val resultActivityIntent = Intent(this, ResultActivity::class.java)
 
-        val resultBundle = Bundle()
-        resultBundle.putString("name", name)
-        resultBundle.putInt("score", score)
+        val resultBundle = Bundle().apply {
+            putString("name", name)
+            putInt("score", score)
+        }
 
         resultActivityIntent.putExtra("resultBundle", resultBundle)
         startActivity(resultActivityIntent)
     }
 
     // main logic function
-    private fun main(countryCodesJSON: JSONObject){
-        val answerCountryCodes: List<String> = getRandomCountryCodes(countryCodesJSON)
-        val answerCountryNames: List<String> = countryCodesToCountryNames(countryCodesJSON, answerCountryCodes)
-        val optionsCountryNames: MutableList<List<String>> = mutableListOf()
-        repeat(answerCountryCodes.size) {
-            optionsCountryNames.add(getRandomOptionsCountryNames(countryCodesJSON, answerCountryCodes[it]))
-        }
+    private fun main(countryCodesJSON: JSONObject) {
+        val answerCountryCodes = getRandomCountryCodes(countryCodesJSON)
+        val answerCountryNames = countryCodesToCountryNames(countryCodesJSON, answerCountryCodes)
+        val optionsCountryNames = answerCountryCodes.map { getRandomOptionsCountryNames(countryCodesJSON, it) }
 
-        val questionList = mutableListOf<Question>()
-        repeat(answerCountryCodes.size) {
-            questionList.add(Question(it + 1, answerCountryCodes[it], answerCountryNames[it], optionsCountryNames[it]))
+        val questionList = answerCountryCodes.mapIndexed { index, code ->
+            Question(index + 1, code, answerCountryNames[index], optionsCountryNames[index])
         }
 
         displayQuestionCards(questionList, 0, 0)
     }
 
-    // main helper functionS
+    // main helper functions
     private fun countryCodesToCountryNames(countryCodesJSON: JSONObject, countryCodesList: List<String>): List<String> {
-        val countryNamesList = mutableListOf<String>()
-        repeat(countryCodesList.size) {
-            countryNamesList.add(countryCodesJSON.get(countryCodesList[it]).toString())
-        }
-
-        return countryNamesList
+        return countryCodesList.map { countryCodesJSON.optString(it) }
     }
 
     private fun getAllCountryCodesList(countryCodesJSON: JSONObject): List<String> {
-        val allCountryCodesList = mutableListOf<String>()
-
-        val countryCodesJSONIterator = countryCodesJSON.keys()
-        while(countryCodesJSONIterator.hasNext()){
-            val code: String = countryCodesJSONIterator.next()
-            if(code.length <= 2){
-                allCountryCodesList.add(code)
-            }
-        }
-
-        return allCountryCodesList
+        return countryCodesJSON.keys().asSequence()
+            .filter { it.length <= 2 }
+            .toList()
     }
 
     private fun getRandomCountryCodes(countryCodesJSON: JSONObject): List<String> {
-        val allCountryCodesList: List<String> = getAllCountryCodesList(countryCodesJSON)
+        val allCountryCodesList = getAllCountryCodesList(countryCodesJSON)
 
-        val min = 0
-        val max: Int = allCountryCodesList.size - 1
-        val count = numberOfQuestions
-
-        val countryCodesList = mutableListOf<String>()
-
-        val randomList: List<Int> = (min..max).shuffled().take(count)
-        repeat(randomList.take(count).size) {
-            countryCodesList.add(allCountryCodesList[randomList[it]])
-        }
-
-        return countryCodesList
+        return allCountryCodesList.shuffled().take(numberOfQuestions)
     }
 
     private fun getRandomOptionsCountryNames(countryCodesJSON: JSONObject, answerCountryCode: String): List<String> {
-        val allCountryCodesList: List<String> = getAllCountryCodesList(countryCodesJSON)
+        val allCountryCodesList = getAllCountryCodesList(countryCodesJSON)
 
-        val min = 0
-        val max: Int = allCountryCodesList.size
-        val count = 4
+        val optionsCountryCodesList = allCountryCodesList
+            .shuffled()
+            .take(4)
+            .toMutableList()
 
-        val optionsCountryCodesList = mutableListOf<String>()
-
-        val randomList = (min..max).shuffled().take(count)
-        repeat(randomList.take(count).size) {
-            optionsCountryCodesList.add(allCountryCodesList[randomList[it]])
-        }
-
-        if(!optionsCountryCodesList.contains(answerCountryCode) && optionsCountryCodesList.size == 4){
+        if (!optionsCountryCodesList.contains(answerCountryCode) && optionsCountryCodesList.size == 4) {
             optionsCountryCodesList.removeAt(0)
             optionsCountryCodesList.add(answerCountryCode)
         }
@@ -147,14 +116,12 @@ class QuizActivity : AppCompatActivity() {
         return countryCodesToCountryNames(countryCodesJSON, optionsCountryCodesList.shuffled())
     }
 
-
     // frontend functions
-    private fun displayQuestionCards(questionList: List<Question>, it: Int, score: Int) {
-        displayQuestionCard(questionList[it]) { result ->
-            if(it < numberOfQuestions - 1){
-                displayQuestionCards(questionList, it + 1, if(result) score + 1 else score)
-            }
-            else{
+    private fun displayQuestionCards(questionList: List<Question>, index: Int, score: Int) {
+        displayQuestionCard(questionList[index]) { result ->
+            if (index < numberOfQuestions - 1) {
+                displayQuestionCards(questionList, index + 1, score + if (result) 1 else 0)
+            } else {
                 startResultActivity(score)
             }
         }
@@ -172,41 +139,29 @@ class QuizActivity : AppCompatActivity() {
         val btnNext = findViewById<Button>(R.id.btn_next)
 
         tvQuestionNo.text = getString(R.string.tv_number_text_default, question.id)
-        downloadAndDisplayFlagImage(this, "${baseURL}/w640/${question.countryCode}.png", ivFlagImage)
-        repeat(btnOptionsList.size) {
-            btnOptionsList[it].text = question.options[it]
-        }
+        downloadAndDisplayFlagImage("${baseURL}/w640/${question.countryCode}.png", ivFlagImage)
 
         var chosenOption = ""
-
-        btnOptionsList[0].setOnClickListener {
-            chosenOption = btnOptionsList[0].text.toString()
-        }
-        btnOptionsList[1].setOnClickListener {
-            chosenOption = btnOptionsList[1].text.toString()
-        }
-        btnOptionsList[2].setOnClickListener {
-            chosenOption = btnOptionsList[2].text.toString()
-        }
-        btnOptionsList[3].setOnClickListener {
-            chosenOption = btnOptionsList[3].text.toString()
+        btnOptionsList.forEachIndexed { index, btn ->
+            btn.text = question.options[index]
+            btn.setOnClickListener {
+                chosenOption = btn.text.toString()
+            }
         }
 
         btnNext.setOnClickListener {
-            if(chosenOption == question.answer){
+            if (chosenOption == question.answer) {
                 callBack(true)
-            }
-            else if(chosenOption.isNotEmpty()){
+                Log.d("CRT_ANS", chosenOption)
+            } else if (chosenOption.isNotEmpty()) {
                 callBack(false)
             }
         }
     }
 
-    private fun downloadAndDisplayFlagImage(context: Context, fileURL: String, imageView: ImageView) {
-        val glide = Glide.with(context)
-
-        val requestBuilder = glide.load(fileURL)
-
-        requestBuilder.into(imageView)
+    private fun downloadAndDisplayFlagImage(fileURL: String, imageView: ImageView) {
+        Glide.with(this)
+            .load(fileURL)
+            .into(imageView)
     }
 }

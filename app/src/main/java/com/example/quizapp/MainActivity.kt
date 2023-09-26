@@ -17,14 +17,17 @@ class MainActivity : AppCompatActivity() {
         val btnStart = findViewById<Button>(R.id.btn_start)
 
         btnStart.setOnClickListener {
+            val name = etName.text.trim().toString()
+
             val quizActivityIntent = Intent(this, QuizActivity::class.java)
 
-            if(etName.text.isEmpty()){
+            if(name.isEmpty()){
                 Toast.makeText(this, "Empty Name!", Toast.LENGTH_SHORT).show()
             }
             else {
-                val nameBundle = Bundle()
-                nameBundle.putString("name", etName.text.toString())
+                val nameBundle = Bundle().apply {
+                    putString("name", name)
+                }
 
                 quizActivityIntent.putExtra("nameBundle", nameBundle)
                 startActivity(quizActivityIntent)
