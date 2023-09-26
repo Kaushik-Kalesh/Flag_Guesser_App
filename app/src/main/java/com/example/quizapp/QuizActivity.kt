@@ -83,7 +83,7 @@ class QuizActivity : AppCompatActivity() {
         displayQuestionCards(questionList, 0, 0)
     }
 
-    // main helper functions
+    // helper functions
     private fun countryCodesToCountryNames(countryCodesJSON: JSONObject, countryCodesList: List<String>): List<String> {
         return countryCodesList.map { countryCodesJSON.optString(it) }
     }
@@ -117,6 +117,12 @@ class QuizActivity : AppCompatActivity() {
     }
 
     // frontend functions
+    private fun downloadAndDisplayFlagImage(fileURL: String, imageView: ImageView) {
+        Glide.with(this)
+            .load(fileURL)
+            .into(imageView)
+    }
+
     private fun displayQuestionCards(questionList: List<Question>, index: Int, score: Int) {
         displayQuestionCard(questionList[index]) { result ->
             if (index < numberOfQuestions - 1) {
@@ -157,11 +163,5 @@ class QuizActivity : AppCompatActivity() {
                 callBack(false)
             }
         }
-    }
-
-    private fun downloadAndDisplayFlagImage(fileURL: String, imageView: ImageView) {
-        Glide.with(this)
-            .load(fileURL)
-            .into(imageView)
     }
 }
